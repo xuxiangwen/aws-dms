@@ -1,0 +1,3 @@
+ALTER TABLE sessiontime ADD PRIMARY KEY (id);
+ALTER TABLE caseinfo ADD PRIMARY KEY (id);
+ALTER TABLE customer ADD PRIMARY KEY (id);
