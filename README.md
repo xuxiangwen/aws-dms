@@ -79,24 +79,24 @@ export rep_instance_id=wechat-full
 export source_endpoint_id=wechat-mysql
 export target_endpoint_id=wechat-redshift
 export allocated_storage=1000
-export vpc_security_group_ids=sg-0f34e25faac8a0d22
-export avail_zone=cn-north-1a
-export rep_sg_id=default-vpc-8ca939e8
-export tasks=customer-service-prod-messages-history,customer-service-prod-others,asc-weixin-mp-menu-click-his,asc-weixin-mp-others
+export vpc_security_group_ids=
+export avail_zone=
+export rep_sg_id=
+export tasks=
 
 export source_db_type=mysql
-export source_db_server=dms-test.czwiaavvhjmc.rds.cn-north-1.amazonaws.com.cn
+export source_db_server=
 export source_db_port=3306
-export source_db_user=tpch
-export source_db_password=Zeus000!
+export source_db_user=
+export source_db_password=
 export source_db_extra=""
 
 export target_db_type=redshift
-export target_db_server=dms-test.cuvboirbr2tr.cn-north-1.redshift.amazonaws.com.cn
+export target_db_server=
 export target_db_name=wechat
 export target_db_port=5439
-export target_db_user=tpch
-export target_db_password=Zeus000!
+export target_db_user=
+export target_db_password=
 export target_db_extra="acceptanydate=true;truncateColumns=true"
 EOF
 
@@ -133,24 +133,24 @@ export rep_instance_id=wechat-cdc
 export source_endpoint_id=wechat-mysql
 export target_endpoint_id=wechat-redshift
 export allocated_storage=50
-export vpc_security_group_ids=sg-0f34e25faac8a0d22
-export avail_zone=cn-north-1a
-export rep_sg_id=default-vpc-8ca939e8
-export tasks=cdc-customer-service-prod,cdc-asc-weixin-mp
+export vpc_security_group_ids=
+export avail_zone=
+export rep_sg_id=
+export tasks=
 
 export source_db_type=mysql
-export source_db_server=dms-test.czwiaavvhjmc.rds.cn-north-1.amazonaws.com.cn
+export source_db_server=d
 export source_db_port=3306
-export source_db_user=tpch
-export source_db_password=Zeus000!
+export source_db_user=
+export source_db_password=
 export source_db_extra=""
 
 export target_db_type=redshift
-export target_db_server=dms-test.cuvboirbr2tr.cn-north-1.redshift.amazonaws.com.cn
-export target_db_name=wechat
+export target_db_server=
+export target_db_name
 export target_db_port=5439
-export target_db_user=tpch
-export target_db_password=Zeus000!
+export target_db_user=
+export target_db_password=
 export target_db_extra="acceptanydate=true;truncateColumns=true"
 EOF
 
