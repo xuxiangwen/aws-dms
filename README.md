@@ -89,7 +89,7 @@ flush privileges;
 - enable automatic backups
 - binlog_format = ROW
 - binlog_checksum = NONE
-- binlog_row_image = full
+- binlog_row_image = FULL
 
 检查参数的脚本如下。
 ```
@@ -105,10 +105,10 @@ show variables like "%binlog_row_image%";
 call mysql.rds_set_configuration('binlog retention hours', 168);      
 call mysql.rds_show_configuration;  -- 查看结果
 ```
-
+详见[Using a Amazon-Managed MySQL-Compatible Database as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.AmazonManaged)
 
 ### 3.12 Redshift
-redshift实例需要拥有dms-access-for-endpoint的权限。见下图。
+redshift实例需要拥有dms-access-for-endpoint的权限。见下图。详见[Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)
 
 ![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
 
