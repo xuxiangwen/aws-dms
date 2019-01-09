@@ -2,13 +2,13 @@
 script=$(readlink -f "$0")
 script_path=$(dirname "$script")
 
-source $script_path/tpch.conf
+source $script_path/../../dms.conf
 
-db=${1:-tpch_1g}
-user=${2:-$db_user}
-password=${3:-$db_password}  
-server=${4:-$db_server}
+db=${1:-$source_default_db_name}
+user=${2:-$source_db_user}
+password=${3:-$source_db_password}  
+server=${4:-$source_db_server}
 
 echo $sql
-mysql  -h $server -f -u $user -p$password  -P $db_port $db 
+mysql  -h $server -f -u $user -p$password  -P $source_db_port $db 
 

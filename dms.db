@@ -1,8 +1,0 @@
-DROP DATABASE wechat;
-CREATE DATABASE wechat;
-
-GRANT ALL ON wechat.* to 'tpch'@'%';
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'tpch'@'%';  
-
-show databases;
-show grants for tpch;
