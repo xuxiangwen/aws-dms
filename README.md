@@ -76,11 +76,11 @@
 ## 3.1 准备
 ### 3.11 MySql
 **用户权限**  
-要实现增量的同步，数据库用户拥有读取数据库和binary log的权限。可以通过以下脚本授权。假设数据库用户名是tpch_rep,密码是1234，授权脚本如下：
+要实现增量的同步，数据库用户拥有读取数据库和binary log的权限。可以通过以下脚本授权。假设数据库用户名是tpch,密码是1234，授权脚本如下：
 ```
-CREATE USER 'tpch_rep'@'%' IDENTIFIED BY '1234';
-GRANT SELECT ON *.* to 'tpch_rep'@'%';
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'tpch_rep'@'%';
+CREATE USER 'tpch'@'%' IDENTIFIED BY '1234';
+GRANT SELECT ON *.* to 'tpch'@'%';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'tpch'@'%';
 flush privileges;
 ```
 **[数据库配置和参数](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.Prerequisites)**
@@ -111,7 +111,7 @@ redshift实例需要拥有dms-access-for-endpoint的权限。见下图。
 ![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
 
 ### 3.13 EC2 Access
-登录EC2 Server，配置AWS权限。AWS用户必须是DMS Admin的权限。
+登录EC2 Server，配置Access Key和Security Key。AWS用户必须是DMS Admin的权限。
 ```
 aws configure
 AWS Access Key ID [None]: 2yc0Y0VebLbWHb16Ee
