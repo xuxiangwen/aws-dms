@@ -6,17 +6,28 @@ source $script_path/dms.conf
 source $script_path/arn.conf
 
 echo -------------------------------------------------------
-echo test source endpint
+echo test connction of source endpint
 aws dms test-connection --replication-instance-arn $rep_instance_arn --endpoint-arn $source_endpoint_arn
 echo -------------------------------------------------------
-echo test target endpoint
+echo test connection of target endpoint
 aws dms test-connection --replication-instance-arn $rep_instance_arn --endpoint-arn $target_endpoint_arn
 
 
-for i in 1 2 3 4 5
+
+echo -------------------------------------------------------
+echo 'start to monitor the result of test connection'
+source_connection_status=""
+target_connection_status=""
+while [ "$source_connection_status" != "successful" ] && [ "$target_connection_status" != "successful" ]
 do
-  sleep 10
   echo -------------------------------------------------------
-  echo show test result
-  aws dms describe-connections --filter "Name=endpoint-arn,Values=$source_endpoint_arn,$target_endpoint_arn"
+  sleep 5  
+  source_connection_status=$(aws dms describe-connections --filter "Name=endpoint-arn,Values=$source_endpoint_arn" --query="Connections[0].Status")
+  target_connection_status=$(aws dms describe-connections --filter "Name=endpoint-arn,Values=$target_endpoint_arn" --query="Connections[0].Status")
+  source_connection_status=$(sed -e 's/^"//' -e 's/"$//' <<<"$source_connection_status")
+  target_connection_status=$(sed -e 's/^"//' -e 's/"$//' <<<"$target_connection_status") 
+  echo source: $source_endpoint_id, connection_status: $source_connection_status
+  echo target: $target_endpoint_id, connection_status: $target_connection_status
 done
+
+
