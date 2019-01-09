@@ -8,7 +8,7 @@
 本文中详细描述了，如何使用DMS把MySql的数据同步到AWS Redshift。其他数据库之间的同步，仅供参考。
 
 # 1. 背景分析
-在我们的项目中，需要把mysql数据库同步到redshift中。mysql是业务数据库，数据会持续更新，所以数据同步不是一次性的工作。而reshift是数据仓库，未来需要同步多个Source数据库到redshift。
+在我们的项目中，需要把mysql数据库同步到redshift中。mysql是业务数据库，数据会持续更新，所以数据同步不是一次性的工作。而redshift是数据仓库，未来需要同步多个Source数据库到redshift。
 
 第一期，只需要同步10张表。除了几张小表，大部分表的数据将在百万级别以上，其中最大的两张表情况如下：
 
@@ -22,7 +22,7 @@
 
 实际的全量同步测试中，经常发现，表A，B的性能不是很好，尤其是表A，其数据同步速度只有每小时1,000,000-2,000,000行。这意味着要完成A表的同步，估计需要20到30小时时间。而且发现replciation instance的Write IOPS非常高，持续达到3000。  
 
-由于业务数据库在白天的访问量还是很大的，1-3天同步时间是无法接受的。业务数据库的空闲时段是03:00-06:00（没有任何的数据变化），只有三个小时，所以全量同步的时间最好不要超过3个小时。
+由于业务数据库在白天的访问量还是很大的，20到30小时的同步时间是无法接受的。业务数据库的空闲时段是03:00-06:00（没有任何的数据变化），只有三个小时，所以全量同步的时间最好不要超过3个小时。
 
 经过监控并分析，我们还发现：  
 
@@ -40,13 +40,13 @@
 
 1. Source数据库的负载。实际测试全量同步时，Source MySql没有任何的数据变化，只有DMS的数据读取，从监控看
     - 单独全量同步A表，MySql ReadIPOS一般在45-55之间，持续时间是10分钟，负载正常。
-    - 所有10张表开始同步，MySql ReadIPOS升高到200，甚至更多。因此，在全量同步时，，要对Source MySql的访问进行控制，以便不会对Source产生过多的性能压力。
+    - 所有10张表开始同步，MySql ReadIPOS升高到200，甚至更多。因此，在全量同步时，要对Source MySql的访问进行控制，以便不会对Source产生过多的性能压力。
 2. Target数据库的负载。实际测试全量同步时，Target Redshift的负载完全正常。Write IPOS一般在60-80之间。
 3. Replication Instance的内存。实际测试全量同步时，4G内存是够用的。监控发现在replication instance上，FreeableMemory超过1G，SwapUsage接近0。
 4. Redshfit数据库，仅支持从S3拷贝数据，这个过程可能会对性能有影响。数据的整个流程是：
     - DMS拷贝Soure数据到replciation isntance的本地磁盘
     - replciation isntance对数据进行进行整理转换。
-    - 把整理后的数据上传到S3。和其他数据库比较，这是增加的一个步骤。qi's由于没有发现metric来量化这步时间，目前不确定是否会影响性能。
+    - 把整理后的数据上传到S3。和其他数据库比较，这是增加的一个步骤。由于没有发现metric来量化这步时间，目前不确定是否会影响性能。
     - Copy S3数据到Redshfit    
 
 
@@ -65,6 +65,8 @@
     - 在业务数据库空闲时段进行数据备份。然后把这个备份恢复到一个新的MySql节点（backup节点）。同时记录下备份完成的时间点。
     - 从backup节点全量同步到Redshift中。完成后删除backup节点和相关资源。
     - 创建新的DMS Task，这些Task连接到业务数据库，设置从上面记录的时间点开始增量同步。
+
+![dms_solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms_solution.png)  
 
 方案一，对全量同步的时间有要求。方案二，要求有read replcia。方案三，要求有业务空闲时段。综合考虑，我们选用方案三，好处如下：
 
@@ -85,9 +87,9 @@ flush privileges;
 ```
 **[数据库配置和参数](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.Prerequisites)**
 - enable automatic backups
-- binlog_format:ROW
-- binlog_checksum=NONE
-- binlog_row_image: full
+- binlog_format = ROW
+- binlog_checksum = NONE
+- binlog_row_image = full
 
 检查参数的脚本如下。
 ```
@@ -110,8 +112,8 @@ redshift实例需要拥有dms-access-for-endpoint的权限。见下图。
 
 ![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
 
-### 3.13 EC2 Access
-登录EC2 Server，配置Access Key和Security Key。AWS用户必须是DMS Admin的权限。
+### 3.13 DMS Security
+要管理员授予IAM用户相应的权限，详见[IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)。然后登录EC2 Server，使用该IAM用户的Access Key和Security Key来配置。
 ```
 aws configure
 AWS Access Key ID [None]: 2yc0Y0VebLbWHb16Ee
@@ -163,14 +165,14 @@ EOF
 ./create_task.sh
 
 # 5. start task
-# 在console中依次启动task。每个步骤都需要等待上一个步骤完成后才执行。
+# 在AWS Console中依次启动task。每个步骤都需要等待上一个步骤完成后才执行。
 # 5.1 customer-service-prod-messages-history  (13m)
 # 5.2 asc-weixin-mp-menu-click-his            (7m)
 # 5.3 customer-service-prod-others （4m）和 asc-weixin-mp-others (5m)
 
 
 # 6. 验证source和target数据是否一致。
-# 7. 在控制台依次删除所有task和replication instance
+# 7. 在AWS Console依次删除所有task和replication instance
 ```
 
 
@@ -206,19 +208,18 @@ export target_db_extra="acceptanydate=true;truncateColumns=true"
 EOF
 
 # 2. 创建replication instance.
-# 创建需要几分钟，在console中查看。等到实例创建成功后，再执行下一步。
+# 创建instance时间较长，一般需要几分钟时间。
 ./create_rep.sh
 
 # 3. 创建source和target endpoints
 ./test_endpoint.sh
 
 # 4. 创建task
-# 创建后，在控制台检查task状态是否是ready
 ./create_task.sh
 
 # 5. start task
 # 当3.2 Full Load的task全部完成后，
-# 在console中启动task：
+# 在AWS Console中启动task：
 # cdc-customer-service-prod 和 cdc-asc-weixin-mp 
 ```
 
