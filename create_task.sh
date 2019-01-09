@@ -5,6 +5,8 @@ script_path=$(dirname "$script")
 source $script_path/dms.conf
 source $script_path/arn.conf
 
+cdc_start_position_=${1:-$cdc_start_position}
+
 $script_path/init_table_mapping.sh
 $script_path/init_task_setting.sh
 
@@ -24,6 +26,17 @@ else
   migration_type=full-load
 fi
 
+if [ "${task_id:0:3}" = "cdc" ] && [ "$cdc_start_position_" != "" ]; then
+aws dms create-replication-task \
+--replication-task-identifier $task_id \
+--source-endpoint-arn $source_endpoint_arn \
+--target-endpoint-arn $target_endpoint_arn \
+--replication-instance-arn $rep_instance_arn \
+--migration-type $migration_type \
+--table-mappings file://json/${task_id}_table.json \
+--replication-task-settings file://json/${task_id}_task.json \
+--cdc-start-position "$cdc_start_position_"
+else
 aws dms create-replication-task \
 --replication-task-identifier $task_id \
 --source-endpoint-arn $source_endpoint_arn \
@@ -32,6 +45,7 @@ aws dms create-replication-task \
 --migration-type $migration_type \
 --table-mappings file://json/${task_id}_table.json \
 --replication-task-settings file://json/${task_id}_task.json
+fi
 done
 echo $task_count tasks have been created
 

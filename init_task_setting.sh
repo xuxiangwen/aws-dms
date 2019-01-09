@@ -7,12 +7,13 @@ source $script_path/dms.conf
 oldIFS=$IFS
 IFS=,
 
+
 for task_id in $tasks
 do
 
 if [ "${task_id:0:3}" = "cdc"  ]; then
-  BatchApplyTimeoutMin=1200
-  BatchApplyTimeoutMax=2400
+  BatchApplyTimeoutMin=$target_BatchApplyTimeoutMin
+  BatchApplyTimeoutMax=$target_BatchApplyTimeoutMax
 else
   BatchApplyTimeoutMin=1
   BatchApplyTimeoutMax=30

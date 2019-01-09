@@ -89,8 +89,8 @@
   },
   "ChangeProcessingTuning": {
     "BatchApplyPreserveTransaction": true,
-    "BatchApplyTimeoutMin": 1200,
-    "BatchApplyTimeoutMax": 2400,
+    "BatchApplyTimeoutMin": 20,
+    "BatchApplyTimeoutMax": 7200,
     "BatchApplyMemoryLimit": 500,
     "BatchSplitSize": 0,
     "MinTransactionSize": 1000,
