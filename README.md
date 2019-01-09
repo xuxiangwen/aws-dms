@@ -20,11 +20,15 @@
 全部的table size是10G左右，table rows是6000w左右。
 总体而言，数据量并不大。但对于第一次同步，由于需要同步全量数据，还是有些压力的。
 
-实际的全量同步测试中，表A，B的性能不是很好，尤其是表A，其数据同步速度只有每小时500,000-1,500,000行。这意味着要完成A表的同步，需要1到3天的时间。由于业务数据库在白天的访问量还是很大的，1-3天同步时间是无法接受的。业务数据库的空闲时段是03:00-06:00（没有任何的数据变化），只有三个小时，所以全量同步的时间最好不要超过3个小时。
+实际的全量同步测试中，经常发现，表A，B的性能不是很好，尤其是表A，其数据同步速度只有每小时1,000,000-2,000,000行。这意味着要完成A表的同步，估计需要20到30小时时间。而且发现replciation instance的Write IOPS非常高，持续达到3000。  
 
-经过监控并分析，我们还发现：
+由于业务数据库在白天的访问量还是很大的，1-3天同步时间是无法接受的。业务数据库的空闲时段是03:00-06:00（没有任何的数据变化），只有三个小时，所以全量同步的时间最好不要超过3个小时。
 
-1. mysql数据库重启后，再进行数据同步，性能提高100-300倍。最快可以达到每小时150,000,000行。实际中A表可以在15分钟之内完成同步。重试了几次，发现都是这个情况，真是有点儿匪夷所思，没法解释。不知道我们的测试环境有什么特别的设置，所以不能保证这种情况会在你的环境里完全重现。
+经过监控并分析，我们还发现：  
+
+1. mysql数据库重启后，再进行数据同步，性能提高50-150倍。最快可以达到每小时150,000,000行。实际中A表最快可以在13分钟之内完成。重试了几次，发现都是这个情况，真是有点儿匪夷所思，没法解释。监控发现replciation instance的Write IOPS降低到了80左右。不知道我们的测试环境有什么特别的设置，所以不能保证这种情况会在你的环境里完全重现。下面是这种情况下的监控结果。
+![monitor1](https://github.com/xuxiangwen/aws-dms/raw/master/image/monitor_result.png)  
+从上面结果可以发现，重新启动mysql后，如果并发同步全部表的话，性能还是下降比较明显。
 2. replciation instance是否有足够的IOPS。当同步的数据量比较大的时候，IOPS有会持续达到3000。默认情况下，在credit用完后（第一次能用30-60分钟），IOPS会下降到磁盘容量的3倍。比方，如果replication instance的磁盘是100G，则基准的IOPS是300。IOPS从3000到300，性能会有5-10倍的降低。也就是说对于大数据量的全量同步，一个大的磁盘非常重要。建议是1000G，这样IOPS可以持续达到3000，而不会衰减。
 3. LOB(Large Binary Objects, 比如text, mediumtext,  longblob等)对性能的影响还是比较大的。实际也发现，表A比表B慢很多。
 4. 在多张表同步的过程中，replication instance 的CPU占用率会比较高。对于多表的全量导入，需要选用配置高一些的cpu，建议是dms.c4.xlarge以上。对于增量的同步，如果每天的增量在1G以内，dms.t2.medium够用的。
@@ -34,8 +38,10 @@
 
 除了以上的重点，也可以关注以下几点。
 
-1. Source数据库的负载。实际测试全量同步时，Source MySql没有任何的数据变化，只有DMS的数据读取，从监控看，其负载完全正常。Read IPOS一般在。由于我们测试的只有10张表，实际数据库中可能是50-100张，甚至更多，所以在全量同步时，一般认为对于Source MySql的访问还是尽量要控制，以便不会对Source产生过多的性能压力
-2. Target数据库的负载。实际测试全量同步时，Target Redshift的负载完全正常。Write IPOS一般在，
+1. Source数据库的负载。实际测试全量同步时，Source MySql没有任何的数据变化，只有DMS的数据读取，从监控看
+    - 单独全量同步A表，MySql ReadIPOS一般在45-55之间，持续时间是10分钟，负载正常。
+    - 所有10张表开始同步，MySql ReadIPOS升高到200，甚至更多。因此，在全量同步时，，要对Source MySql的访问进行控制，以便不会对Source产生过多的性能压力。
+2. Target数据库的负载。实际测试全量同步时，Target Redshift的负载完全正常。Write IPOS一般在60-80之间。
 3. Replication Instance的内存。实际测试全量同步时，4G内存是够用的。监控发现在replication instance上，FreeableMemory超过1G，SwapUsage接近0。
 4. Redshfit数据库，仅支持从S3拷贝数据，这个过程可能会对性能有影响。数据的整个流程是：
     - DMS拷贝Soure数据到replciation isntance的本地磁盘
@@ -68,13 +74,57 @@
 
 # 3. 代码实现
 ## 3.1 准备
+### 3.11 MySql
+**用户权限**  
+要实现增量的同步，数据库用户拥有读取数据库和binary log的权限。可以通过以下脚本授权。假设数据库用户名是tpch_rep,密码是1234，授权脚本如下：
+```
+CREATE USER 'tpch_rep'@'%' IDENTIFIED BY '1234';
+GRANT SELECT ON *.* to 'tpch_rep'@'%';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'tpch_rep'@'%';
+flush privileges;
+```
+**[数据库配置和参数](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.Prerequisites)**
+- enable automatic backups
+- binlog_format:ROW
+- binlog_checksum=NONE
+- binlog_row_image: full
 
+检查参数的脚本如下。
+```
+show variables like "%binlog_format%";
+show variables like "%binlog_checksum%";
+show variables like "%binlog_row_image%";
+```
+
+ 
+**设置binary log的过期时间**  
+在PRO上log的过期时间是168小时，也是就是7天。而在DEV或ITG，一般设置成1小时就可以了。
+```
+call mysql.rds_set_configuration('binlog retention hours', 168);      
+call mysql.rds_show_configuration;  -- 查看结果
+```
+
+
+### 3.12 Redshift
+redshift实例需要拥有dms-access-for-endpoint的权限。见下图。
+
+![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
+
+### 3.13 EC2 Access
+登录EC2 Server，配置AWS权限。AWS用户必须是DMS Admin的权限。
+```
+aws configure
+AWS Access Key ID [None]: 2yc0Y0VebLbWHb16Ee
+AWS Secret Access Key [None]: 2yc0Y0VebLbWHb16Ee2yc0Y0VebLbWHb16Ee
+Default region name [None]: cn-north-1
+Default output format [None]: json
+```
 
 ## 3.2 全量同步(Full Load)
 ```
 # 1 配置文件编辑。
 cat << EOF > dms.conf 
-export rep_instance_class=dms.c4.large
+export rep_instance_class=dms.c4.xlarge
 export rep_instance_id=wechat-full
 export source_endpoint_id=wechat-mysql
 export target_endpoint_id=wechat-redshift
@@ -93,11 +143,12 @@ export source_db_extra=""
 
 export target_db_type=redshift
 export target_db_server=
-export target_db_name=wechat
+export target_db_name=
 export target_db_port=5439
 export target_db_user=
 export target_db_password=
 export target_db_extra="acceptanydate=true;truncateColumns=true"
+
 EOF
 
 # 2. 创建replication instance.
@@ -112,14 +163,14 @@ EOF
 ./create_task.sh
 
 # 5. start task
-# 在console中启动task。希望能在2个小时之内完成。
-# 1. customer-service-prod-messages-history  (13m)
-#    如果性能不佳，尝试重新数据库服务器。不重启，数据同步的性能差100-300倍，原因何在？
-# 2. asc-weixin-mp-menu-click-his            (7m)
-# 3. customer-service-prod-others （4m）和 asc-weixin-mp-others (5m)
+# 在console中依次启动task。每个步骤都需要等待上一个步骤完成后才执行。
+# 5.1 customer-service-prod-messages-history  (13m)
+# 5.2 asc-weixin-mp-menu-click-his            (7m)
+# 5.3 customer-service-prod-others （4m）和 asc-weixin-mp-others (5m)
 
-# 6. 删除所有task和replication instance
-# 在控制台中依次删除。
+
+# 6. 验证source和target数据是否一致。
+# 7. 在控制台依次删除所有task和replication instance
 ```
 
 
@@ -139,7 +190,7 @@ export rep_sg_id=
 export tasks=
 
 export source_db_type=mysql
-export source_db_server=d
+export source_db_server=
 export source_db_port=3306
 export source_db_user=
 export source_db_password=
@@ -147,7 +198,7 @@ export source_db_extra=""
 
 export target_db_type=redshift
 export target_db_server=
-export target_db_name
+export target_db_name=
 export target_db_port=5439
 export target_db_user=
 export target_db_password=
@@ -166,13 +217,14 @@ EOF
 ./create_task.sh
 
 # 5. start task
-# 在console中启动task。当Full Load的task全部完成后。
-# 1. cdc-customer-service-prod 和 cdc-asc-weixin-mp 
+# 当3.2 Full Load的task全部完成后，
+# 在console中启动task：
+# cdc-customer-service-prod 和 cdc-asc-weixin-mp 
 ```
+
 
 # 参考
 - [AWS DMS Best Practices]( https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.htm)
 - [How to Script a Database Migration](https://amazonaws-china.com/blogs/database/how-to-script-a-database-migration/)
 - [DMS Available Commands](https://docs.aws.amazon.com/cli/latest/reference/dms/index.html#cli-aws-dms)
 - [Monitoring AWS DMS Tasks](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Monitoring.html)
-
