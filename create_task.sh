@@ -20,8 +20,10 @@ echo ---------------------------------------------------------------------------
 echo creat task $task_id
 task_count=$(( $task_count + 1 ))
 
-if [ "${task_id:0:3}" = "cdc"  ]; then
+if [ "${task_id:0:4}" = "cdc-"  ]; then
   migration_type=cdc
+elif [ "${task_id:0:9}" = "full-cdc-" ]; then
+  migration_type=full-load-and-cdc
 else
   migration_type=full-load
 fi

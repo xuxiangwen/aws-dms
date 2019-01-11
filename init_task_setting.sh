@@ -11,7 +11,10 @@ IFS=,
 for task_id in $tasks
 do
 
-if [ "${task_id:0:3}" = "cdc"  ]; then
+if [ "${task_id:0:4}" = "cdc-"  ]; then
+  BatchApplyTimeoutMin=$target_BatchApplyTimeoutMin
+  BatchApplyTimeoutMax=$target_BatchApplyTimeoutMax
+elif [ "${task_id:0:9}" = "full-cdc-"  ]; then
   BatchApplyTimeoutMin=$target_BatchApplyTimeoutMin
   BatchApplyTimeoutMax=$target_BatchApplyTimeoutMax
 else
