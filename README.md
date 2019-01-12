@@ -163,14 +163,13 @@ export target_db_extra="acceptanydate=true;truncateColumns=true"
 EOF
 
 # 2. 创建replication instance.
-# 创建需要几分钟，在console中查看。等到实例创建成功后，再执行下一步。
+# 创建instance时间较长，一般需要几分钟时间。
 ./create_rep.sh
 
 # 3. 创建source和target endpoints
-./create_endpoint.sh
+./test_endpoint.sh
 
 # 4. 创建task
-# 创建后，在控制台检查task状态是否是ready
 ./create_task.sh
 
 # 5. start task
