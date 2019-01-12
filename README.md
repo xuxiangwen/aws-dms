@@ -67,10 +67,11 @@
     - 在业务数据库空闲时段进行数据备份。然后把这个备份恢复到一个新的MySql节点（backup节点）。同时记录下备份完成的时间点。
     - 从backup节点全量同步到Redshift中。完成后删除backup节点和相关资源。
     - 创建新的DMS Task，这些Task连接到业务数据库，设置从上面记录的时间点开始增量同步。
+4. backup mysql - backup redshift同步。基本上和方案三一样，只是redshift也需要额外做一次恢复。
 
-![dms_solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms_solutions.png)  
+![dms_solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms_solutionss.png)  
 
-方案一，对全量同步的时间有要求。方案二，要求有read replcia。方案三，要求有业务空闲时段。综合考虑，我们选用方案三，好处如下：
+方案一，对全量同步的时间有要求。方案二，要求有read replcia。方案三，要求有业务空闲时段。方案四，多一步过程，繁琐一些。综合考虑，我们选用方案三，好处如下：
 
 - 对全量同步的时间没有绝对要求。当然时间越短越好。
 - 对业务数据库的影响最小。在方案二中，一些报表或业务系统会使用read replica节点作为数据源，全量复制对于这些系统的性能还是有影响的。
