@@ -85,7 +85,25 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
 
 # 3. 代码实现
 ## 3.1 准备
-### 3.11 MySQL
+### 3.11 DMS Security
+1. 授予IAM用户DMS权限。授权后，登录AWS Console，该用户可以对DMS进行操作和监控。详见[IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)。
+2. 创建以下IAM Role。DMS将会使用这些Role来执行Task，创建CloudWatch Log等。详见[Creating the IAM Roles to Use With the AWS CLI and AWS DMS API](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html)。
+    - dms-vpc-role 
+    - dms-cloudwatch-logs-role
+    - dms-access-for-endpoint
+3. 登录Linux Server，使用该IAM用户的Access Key和Security Key来配置。将在该Linux Server来执行DMS脚本。
+
+```
+aws configure
+AWS Access Key ID [None]: 2yc0Y0VebLbWHb16Ee
+AWS Secret Access Key [None]: 2yc0Y0VebLbWHb16Ee2yc0Y0VebLbWHb16Ee
+Default region name [None]: cn-north-1
+Default output format [None]: json
+``` 
+
+### 3.12 MySQL
+数据实例是AWS MySQL，按照以下设置。
+
 **用户权限**  
 要实现增量的同步，数据库用户拥有读取数据库和binary log的权限。可以通过以下脚本授权。假设数据库用户名是tpch,密码是1234，授权脚本如下：
 ```
@@ -94,7 +112,7 @@ GRANT SELECT ON *.* to 'tpch'@'%';
 GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'tpch'@'%';
 flush privileges;
 ```
-**[数据库配置和参数](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.Prerequisites)**
+**数据库配置和参数**
 - enable automatic backups
 - binlog_format = ROW
 - binlog_checksum = NONE
@@ -116,20 +134,12 @@ call MySQL.rds_show_configuration;  -- 查看结果
 ```
 详见[Using a Amazon-Managed MySQL-Compatible Database as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.AmazonManaged)
 
-### 3.12 Redshift
+### 3.13 Redshift
 redshift实例需要拥有dms-access-for-endpoint的权限。见下图。详见[Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)
 
 ![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
 
-### 3.13 DMS Security
-要管理员授予IAM用户相应的权限，详见[IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)。然后登录EC2 Server，使用该IAM用户的Access Key和Security Key来配置。
-```
-aws configure
-AWS Access Key ID [None]: 2yc0Y0VebLbWHb16Ee
-AWS Secret Access Key [None]: 2yc0Y0VebLbWHb16Ee2yc0Y0VebLbWHb16Ee
-Default region name [None]: cn-north-1
-Default output format [None]: json
-```
+
 
 ## 3.2 全量同步(Full Load)
 ```
@@ -233,7 +243,11 @@ EOF
 
 
 # 参考
-- [AWS DMS Best Practices]( https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.htm)
-- [How to Script a Database Migration](https://amazonaws-china.com/blogs/database/how-to-script-a-database-migration/)
-- [DMS Available Commands](https://docs.aws.amazon.com/cli/latest/reference/dms/index.html#cli-aws-dms)
-- [Monitoring AWS DMS Tasks](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Monitoring.html)
+1. [AWS DMS Best Practices]( https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.htm)
+2. [How to Script a Database Migration](https://amazonaws-china.com/blogs/database/how-to-script-a-database-migration/)
+3. [DMS Available Commands](https://docs.aws.amazon.com/cli/latest/reference/dms/index.html#cli-aws-dms)
+4. [Monitoring AWS DMS Tasks](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Monitoring.html)
+5. [Using a Amazon-Managed MySQL-Compatible Database as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.AmazonManaged)
+6. [Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)
+7. [IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)
+8. [Creating the IAM Roles to Use With the AWS CLI and AWS DMS API](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html)
