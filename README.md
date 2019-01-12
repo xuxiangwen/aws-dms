@@ -239,7 +239,6 @@ EOF
 ./create_task.sh
 
 # 5. start task
-# 当3.2 Full Load的task全部完成后，
 # 在AWS Console中启动task：cds_all
 ```
 
