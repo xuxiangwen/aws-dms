@@ -153,7 +153,8 @@ export allocated_storage=1000
 export vpc_security_group_ids=
 export avail_zone=
 export rep_sg_id=
-export tasks=
+# task的名称列表
+export tasks=full_A,full_B,full_others 
 
 export source_db_type=mysql
 export source_db_server=
@@ -180,14 +181,14 @@ EOF
 ./create_endpoint.sh
 
 # 4. 创建task
+# task的table-mappings和replication-task-settings分别是在init_table_mapping.sh和init_task_setting.sh中定义的。
 ./create_task.sh
 
 # 5. start task
 # 在AWS Console中依次启动task。每个步骤都需要等待上一个步骤完成后才执行。
-# 5.1 customer-service-prod-messages-history  (13m)
-# 5.2 asc-weixin-mp-menu-click-his            (7m)
-# 5.3 customer-service-prod-others （4m）和 asc-weixin-mp-others (5m)
-
+# 5.1 full_A
+# 5.2 full_B 
+# 5.3 full_others
 
 # 6. 验证source和target数据是否一致。
 # 7. 在AWS Console依次删除所有task和replication instance
@@ -207,7 +208,8 @@ export allocated_storage=50
 export vpc_security_group_ids=
 export avail_zone=
 export rep_sg_id=
-export tasks=
+# task的名称列表
+export tasks=cds_all
 
 export source_db_type=mysql
 export source_db_server=
@@ -233,12 +235,12 @@ EOF
 ./test_endpoint.sh
 
 # 4. 创建task
+# task的table-mappings和replication-task-settings分别是在init_table_mapping.sh和init_task_setting.sh中定义的。
 ./create_task.sh
 
 # 5. start task
 # 当3.2 Full Load的task全部完成后，
-# 在AWS Console中启动task：
-# cdc-customer-service-prod 和 cdc-asc-weixin-mp 
+# 在AWS Console中启动task：cds_all
 ```
 
 
