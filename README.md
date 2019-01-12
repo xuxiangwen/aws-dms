@@ -75,7 +75,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
     - 创建新的DMS Task，这些Task连接到业务数据库，设置从上面记录的时间点开始增量同步。
 4. backup MySQL - backup redshift同步。基本上和方案三一样，只是redshift也需要额外做一次恢复。
 
-![dms_solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms_solutionss.png)  
+![dms_solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms_solutions.png)  
 
 方案一，对全量同步的时间有要求。方案二，要求有read replcia。方案三，要求有业务空闲时段。方案四，多一步过程，繁琐一些。综合考虑，我们选用方案三，好处如下：
 
