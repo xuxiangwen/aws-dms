@@ -166,8 +166,8 @@ EOF
 # 创建instance时间较长，一般需要几分钟时间。
 ./create_rep.sh
 
-# 3. 创建source和target endpoints
-./test_endpoint.sh
+# 3. 创建并测试连接source和target endpoints
+./create_endpoint.sh
 
 # 4. 创建task
 ./create_task.sh
@@ -219,7 +219,7 @@ EOF
 # 创建instance时间较长，一般需要几分钟时间。
 ./create_rep.sh
 
-# 3. 创建source和target endpoints
+# 3. 测试连接source和target endpoints
 ./test_endpoint.sh
 
 # 4. 创建task
