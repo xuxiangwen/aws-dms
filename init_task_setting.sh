@@ -4,6 +4,8 @@ script_path=$(dirname "$script")
 
 source $script_path/dms.conf
 
+LOGGER_SEVERITY=${1:-LOGGER_SEVERITY_DEBUG}
+
 oldIFS=$IFS
 IFS=,
 
@@ -53,11 +55,11 @@ cat << EOF > $script_path/json/${task_id}_task.json
     "LogComponents": [
       {
         "Id": "SOURCE_UNLOAD",
-        "Severity": "LOGGER_SEVERITY_DEBUG"
+        "Severity": "$LOGGER_SEVERITY"
       },
       {
         "Id": "SOURCE_CAPTURE",
-        "Severity": "LOGGER_SEVERITY_DEBUG"
+        "Severity": "$LOGGER_SEVERITY"
       },
       {
         "Id": "TARGET_LOAD",
@@ -69,9 +71,9 @@ cat << EOF > $script_path/json/${task_id}_task.json
       },
       {
         "Id": "TASK_MANAGER",
-        "Severity": "LOGGER_SEVERITY_DEBUG"
+        "Severity": "$LOGGER_SEVERITY"
       }
-    ],
+    ]
   },
   "ControlTablesSettings": {
     "historyTimeslotInMinutes": 5,
