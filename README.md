@@ -40,7 +40,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
 2. replciation instance是否有足够的IOPS。当同步的数据量比较大的时候，IOPS有会持续达到3000。默认情况下，在credit用完后（第一次能用30-60分钟），IOPS会下降到磁盘容量的3倍。比方，如果replication instance的磁盘是100G，则基准的IOPS是300。IOPS从3000到300，性能会有5-10倍的降低。也就是说对于大数据量的全量同步，一个大的磁盘非常重要。建议是1000G，这样IOPS可以持续达到3000，而不会衰减。
 3. LOB(Large Binary Objects, 比如text, mediumtext,  longblob等)对性能的影响还是比较大的。实际也发现，表A比表B慢很多。
 4. 在多张表同步的过程中，replication instance 的CPU占用率会比较高。对于多表的全量导入，需要选用配置高一些的cpu，建议是dms.c4.large以上。对于增量的同步，如果每天的增量在1G以内，dms.t2.medium够用的。
-5. 全量同步时，最好选择在MySQL的空闲时段。这是因为如果MySQL有频繁的数据变化，DMS读取MySQL数据的性能会下降，replciation instance也需要更大的内存来缓存增量数据，而这些都会进一步降低同步的性能。
+5. 全量同步时，最好选择在MySQL的空闲时段。这是因为如果MySQL有频繁的数据变化，DMS读取MySQL数据的性能会下降，replication  instance也需要更大的内存来缓存增量数据，而这些都会进一步降低同步的性能。
 
 综合分析，以上几点点对性能的影响是比较大的。在方案中我们将会重点考虑。
 
@@ -108,7 +108,7 @@ Default output format [None]: json
 要实现增量的同步，数据库用户拥有读取数据库和binary log的权限。可以通过以下脚本授权。假设数据库用户名是tpch,密码是1234，授权脚本如下：
 ```
 CREATE USER 'tpch'@'%' IDENTIFIED BY '1234';
-GRANT SELECT ON *.* to 'tpch'@'%';
+GRANT SELECT ON *.* to 'tpch'@'%';  -- used to compare data
 GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'tpch'@'%';
 flush privileges;
 ```
@@ -132,10 +132,10 @@ show variables like "%binlog_row_image%";
 call MySQL.rds_set_configuration('binlog retention hours', 168);      
 call MySQL.rds_show_configuration;  -- 查看结果
 ```
-详见[Using a Amazon-Managed MySQL-Compatible Database as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.AmazonManaged)
+详见[Using a Amazon-Managed MySQL-Compatible Database as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html#CHAP_Source.MySQL.AmazonManaged)。
 
 ### 3.13 Redshift
-redshift实例需要拥有dms-access-for-endpoint的权限。见下图。详见[Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)
+redshift实例需要拥有dms-access-for-endpoint的权限。见下图。详见[Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)。
 
 ![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
 
