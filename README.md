@@ -259,6 +259,7 @@ EOF
 ```
 
 由于target是Redshift，BatchApplyTimeoutMin和BatchApplyTimeoutMax的值非常重要。这两个变量定义每隔多少秒来进行Copy数据。在实际项目中，可以根据数据同步的实时性要求和Redshift的负载情况来进行设定。测试表明，BatchApplyTimeoutMin从120秒改成600秒，redshif集群的负载大大减轻。详情如下：  
+
 | BatchApplyTimeoutMin | CPU utilization | Write IOPS |
 |----------------------|-----------------|------------|
 | 120                  | 4.70%           | 46.05      |
