@@ -6,6 +6,7 @@
 - 增量实时的同步。由于采用读取数据库的log来进行同步数据，所以理论上，可以做到实时的同步。而且，这种方式的同步对Source数据库的压力比较小。
 - 支持Insert, Update, Delete的操作的数据同步。虽然在Source数据库中，绝大多数的操作是Insert，但一般会有少量的Delete和Update。
 - 简单可靠。由于是AWS官方的服务，是比较可靠的。虽然是黑箱，但可以通过日志来获取详细信息。和其他类似工具来比较，AWS DMS不是最易用的，但如果Target数据库是AWS自己的数据库（Aurora，DynamoDB，Redshift等），AWS DMS无疑更加的可靠。
+- 每个实例半年之内免费。DMS价格其实不算便宜了，也没有
 
 
 
@@ -171,6 +172,11 @@ export target_db_user=
 export target_db_password=
 export target_db_extra="acceptanydate=true;truncateColumns=true"
 
+# only for onging replication
+export BatchApplyTimeoutMin=600
+export BatchApplyTimeoutMax=1800
+# cdc_start_position
+export cdc_start_position=2019-01-10T20:05:46
 EOF
 
 # 2. 创建replication instance.
@@ -197,7 +203,7 @@ EOF
 
 
 ## 3.3 增量同步(ongoing replication)
-增量同步需要在dms.conf设定cdc_start_position。可以有以下几种设定方式。详见[create-replication-task](https://docs.aws.amazon.com/cli/latest/reference/dms/create-replication-task.html)。
+增量同步需要在dms.conf中设定cdc_start_position。可以有以下几种设定方式。详见[create-replication-task](https://docs.aws.amazon.com/cli/latest/reference/dms/create-replication-task.html)。
 - cdc_start_position=2018-03-08T12:12:12
 - cdc_start_position=checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93
 - cdc_start_position=mysql-bin-changelog.000024:373
@@ -231,8 +237,8 @@ export target_db_password=
 export target_db_extra="acceptanydate=true;truncateColumns=true"
 
 # only for onging replication
-export target_BatchApplyTimeoutMin=1200
-export target_BatchApplyTimeoutMax=7200
+export BatchApplyTimeoutMin=600
+export BatchApplyTimeoutMax=1800
 # cdc_start_position
 export cdc_start_position=2019-01-10T20:05:46
 EOF
@@ -252,6 +258,12 @@ EOF
 # 在AWS Console中启动task：cds_all
 ```
 
+由于target是Redshift，BatchApplyTimeoutMin和BatchApplyTimeoutMax的值非常重要。这两个变量定义每隔多少秒来进行Copy数据。在实际项目中，可以根据数据同步的实时性要求和Redshift的负载情况来进行设定。测试表明，BatchApplyTimeoutMin从120秒改成600秒，redshif集群的负载大大减轻。详情如下：  
+
+| BatchApplyTimeoutMin | CPU utilization | Write IOPS |
+|----------------------|-----------------|------------|
+| 120                  | 4.70%           | 46.05      |
+| 600                  | 2.80%           | 13.38      |
 
 # 参考
 1. [AWS DMS Best Practices]( https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.htm)
