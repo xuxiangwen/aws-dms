@@ -14,14 +14,14 @@ for task_id in $tasks
 do
 
 if [ "${task_id:0:4}" = "cdc-"  ]; then
-  BatchApplyTimeoutMin=$target_BatchApplyTimeoutMin
-  BatchApplyTimeoutMax=$target_BatchApplyTimeoutMax
+  BatchApplyTimeoutMin_=$BatchApplyTimeoutMin
+  BatchApplyTimeoutMax_=$BatchApplyTimeoutMax
 elif [ "${task_id:0:9}" = "full-cdc-"  ]; then
-  BatchApplyTimeoutMin=$target_BatchApplyTimeoutMin
-  BatchApplyTimeoutMax=$target_BatchApplyTimeoutMax
+  BatchApplyTimeoutMin_=$BatchApplyTimeoutMin
+  BatchApplyTimeoutMax_=$BatchApplyTimeoutMax
 else
-  BatchApplyTimeoutMin=1
-  BatchApplyTimeoutMax=30
+  BatchApplyTimeoutMin_=1
+  BatchApplyTimeoutMax_=30
 fi
 
 
@@ -117,8 +117,8 @@ cat << EOF > $script_path/json/${task_id}_task.json
   },
   "ChangeProcessingTuning": {
     "BatchApplyPreserveTransaction": true,
-    "BatchApplyTimeoutMin": $BatchApplyTimeoutMin,
-    "BatchApplyTimeoutMax": $BatchApplyTimeoutMax,
+    "BatchApplyTimeoutMin": $BatchApplyTimeoutMin_,
+    "BatchApplyTimeoutMax": $BatchApplyTimeoutMax_,
     "BatchApplyMemoryLimit": 500,
     "BatchSplitSize": 0,
     "MinTransactionSize": 1000,
