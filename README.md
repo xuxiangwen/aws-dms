@@ -197,6 +197,10 @@ EOF
 
 
 ## 3.3 增量同步(ongoing replication)
+增量同步需要在dms.conf设定cdc_start_position。可以有以下几种设定方式。详见[create-replication-task](https://docs.aws.amazon.com/cli/latest/reference/dms/create-replication-task.html)。
+- cdc_start_position=2018-03-08T12:12:12
+- cdc_start_position=checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93
+- cdc_start_position=mysql-bin-changelog.000024:373
 ```
 # 1 配置文件编辑。
 cat << EOF > dms.conf 
@@ -225,6 +229,12 @@ export target_db_port=5439
 export target_db_user=
 export target_db_password=
 export target_db_extra="acceptanydate=true;truncateColumns=true"
+
+# only for onging replication
+export target_BatchApplyTimeoutMin=1200
+export target_BatchApplyTimeoutMax=7200
+# cdc_start_position
+export cdc_start_position=2019-01-10T20:05:46
 EOF
 
 # 2. 创建replication instance.
@@ -252,3 +262,4 @@ EOF
 6. [Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)
 7. [IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)
 8. [Creating the IAM Roles to Use With the AWS CLI and AWS DMS API](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html)
+9. [create-replication-task](https://docs.aws.amazon.com/cli/latest/reference/dms/create-replication-task.html)
