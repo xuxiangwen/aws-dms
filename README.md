@@ -6,7 +6,7 @@
 - 增量实时的同步。由于采用读取数据库的log来进行同步数据，所以理论上，可以做到实时的同步。而且，这种方式的同步对Source数据库的压力比较小。
 - 支持Insert, Update, Delete的操作的数据同步。虽然在Source数据库中，绝大多数的操作是Insert，但一般会有少量的Delete和Update。
 - 简单可靠。由于是AWS官方的服务，是比较可靠的。虽然是黑箱，但可以通过日志来获取详细信息。和其他类似工具来比较，AWS DMS不是最易用的，但如果Target数据库是AWS自己的数据库（Aurora，DynamoDB，Redshift等），AWS DMS无疑更加的可靠。
-- 每个实例半年之内免费。DMS价格其实不算便宜了，也没有
+- 如果target db是Amazon Aurora, Amazon Redshift, Amazon DynamoDB，每个实例半年免费。DMS Replication Instance价格比同配置EC2 Server贵一点，但半年免费后，反而更加便宜。详见[Free DMS](https://amazonaws-china.com/dms/free-dms/)。
 
 
 
