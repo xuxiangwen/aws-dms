@@ -275,3 +275,4 @@ EOF
 7. [IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)
 8. [Creating the IAM Roles to Use With the AWS CLI and AWS DMS API](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html)
 9. [create-replication-task](https://docs.aws.amazon.com/cli/latest/reference/dms/create-replication-task.html)
+10. [Free DMS](https://amazonaws-china.com/dms/free-dms/)
