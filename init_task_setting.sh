@@ -24,6 +24,7 @@ else
   BatchApplyTimeoutMax_=30
 fi
 
+mkdir -p $script_path/json
 
 cat << EOF > $script_path/json/${task_id}_task.json
 {

@@ -2,6 +2,7 @@
 script=$(readlink -f "$0")
 script_path=$(dirname "$script")
 
+mkdir -p $script_path/json
 
 task_id=full-customer-service-prod-messages-history
 cat << EOF > $script_path/json/${task_id}_table.json
