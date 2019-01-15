@@ -8,7 +8,7 @@ source $script_path/arn.conf
 cdc_start_position_=${1:-$cdc_start_position}
 
 $script_path/init_table_mapping.sh
-$script_path/init_task_setting.sh
+$script_path/init_task_setting.sh LOGGER_SEVERITY_DEFAULT
 
 oldIFS=$IFS
 IFS=,
