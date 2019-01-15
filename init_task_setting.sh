@@ -80,9 +80,9 @@ cat << EOF > $script_path/json/${task_id}_task.json
     "historyTimeslotInMinutes": 5,
     "ControlSchema": "",
     "HistoryTimeslotInMinutes": 5,
-    "HistoryTableEnabled": false,
-    "SuspendedTablesTableEnabled": false,
-    "StatusTableEnabled": false
+    "HistoryTableEnabled": true,
+    "SuspendedTablesTableEnabled": true,
+    "StatusTableEnabled": true
   },
   "StreamBufferSettings": {
     "StreamBufferCount": 3,
