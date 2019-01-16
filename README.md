@@ -220,6 +220,36 @@ EOF
 # 7. 在AWS Console依次删除所有task和replication instance
 ```
 
+对于每个Task, 都需要相应的table mapping。需要编辑init_table_mapping.sh来创建具体table mapping。
+
+init_table_mapping.sh内容示例
+```
+# !/bin/bash
+script=$(readlink -f "$0")
+script_path=$(dirname "$script")
+
+mkdir -p $script_path/json
+
+task_id=full-A
+cat << EOF > $script_path/json/${task_id}_table.json
+{
+  "rules": [
+    {
+      "rule-type": "selection",
+      "rule-id": "1",
+      "rule-name": "1",
+      "object-locator": {
+        "schema-name": "schema_1",
+        "table-name": "A"
+      },
+      "rule-action": "include"
+    }
+  ]
+}
+EOF
+
+...
+```
 
 
 ## 3.3 增量同步(ongoing replication)
