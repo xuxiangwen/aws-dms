@@ -76,15 +76,33 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
     - 创建新的DMS Task，这些Task连接到业务数据库，设置从上面记录的时间点开始增量同步。
 4. backup MySQL - backup redshift同步。基本上和方案三一样，只是redshift也需要额外做一次恢复。
 
-![dms_solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms_solutions.png)  
+![solution](https://github.com/xuxiangwen/aws-dms/raw/master/image/solution.png)  
 
-方案一，对全量同步的时间有要求。方案二，要求有read replcia。方案三，要求有业务空闲时段。方案四，多一步过程，繁琐一些。综合考虑，我们选用方案三，好处如下：
+比较来看：
+- 方案一和方案二非常相似，简单直接。虽然方案二对全量同步的速度没有要求那么高，但还是越快越好，因为这样除了降低服务器的压力，更加有利于快速验证同步的结果，排查可能出现的的问题。 
 
-- 对全量同步的时间没有绝对要求。当然时间越短越好。
-- 对业务数据库的影响最小。在方案二中，一些报表或业务系统会使用read replica节点作为数据源，全量复制对于这些系统的性能还是有影响的。
-- 便于验证数据同步的结果。和前两个方案比较，backup节点是没有任何数据变化的，这样便于比较Source和Target之间的数据是否完全一致。
+    因此，对于大表，还需要采用一些性能优化的方法。常用的方法是通过ID（主键或唯一键）或时间的创建多个DMS Task。比如：
+    - Task1: ID from 1 to 10,000,000 
+    - Task2: ID from 10,000,001 to 20,000,000
+    - Task3: ID from 20,000,001 to 30,000,000
+    - ...
+    
+    采用递增的主键的ID作为拆分的字段，可以获得很好的性能。而如果采用时间来作为拆分字段，一般该字段最好是Partition Key，否者的话，性能可能会受影响。
+- 方案三和方案四非常相似，由于隔离了业务数据库，可以方便惬意的来处理。
+
+    - 对全量同步的时间没有绝对要求。
+    - 对业务数据库的影响最小。
+    - 更加容易验证数据同步的结果。backup节点是没有其他系统的访，这样也没有任何数据变化的，这样便于比较Source和Target之间的数据是否完全一致。
+    
+    在图中，我们选用了snapshot的备份创建时间作为onging同步的开始时间点，这要求业务数据库有一个比较长的业务空闲期。
+    
+    另外一个方法，或许也是更好的方法是，记录一下全量同步后的每个表的[Max ID]，然后创建一个full load+ongoing类型的同步Task。在每个表的row filtering里设定ID >= [Max ID ID]+1。 其实这个方法和上面提到的方案一和方案二的性能优化方法思路非常相似。
+    
 
 # 3. 代码实现
+
+下面的代码实现以方案三作为基准。如果用其他方案，基本也是差不多的。
+
 ## 3.1 准备
 ### 3.11 DMS Security
 1. 授予IAM用户DMS权限。授权后，登录AWS Console，该用户可以对DMS进行操作和监控。详见[IAM Permissions Needed to Use AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html)。
@@ -208,6 +226,7 @@ EOF
 - cdc_start_position=checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93
 - cdc_start_position=mysql-bin-changelog.000024:373
 ```
+
 # 1 配置文件编辑。
 cat << EOF > dms.conf 
 export rep_instance_class=dms.t2.medium
@@ -267,7 +286,7 @@ EOF
 
 # 参考
 1. [AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/Welcome.html)
-2. [AWS DMS Best Practices]( https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.htm)
+2. [AWS DMS Best Practices](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_BestPractices.htm)
 3. [How to Script a Database Migration](https://amazonaws-china.com/blogs/database/how-to-script-a-database-migration/)
 4. [DMS Available Commands](https://docs.aws.amazon.com/cli/latest/reference/dms/index.html#cli-aws-dms)
 5. [Monitoring AWS DMS Tasks](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Monitoring.html)
