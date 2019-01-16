@@ -31,7 +31,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
 
 经过监控并分析，我们还发现：  
 
-1. MySQL的数据库重启后，再进行数据同步，性能提高50-150倍。最快可以达到每小时150,000,000行。实际中A表最快可以在13分钟之内完成。重试了几次，发现都是这个情况，真是有点儿匪夷所思，没法解释。监控发现replciation instance的Write IOPS降低到了80左右。为何重启RDS会提高性能，猜想可能原因有：
+1. MySQL数据库重启后，再进行数据同步，性能提高50-150倍。最快可以达到每小时150,000,000行。实际中A表最快可以在13分钟之内完成。重试了几次，发现都是这个情况，真是有点儿匪夷所思，没法解释。监控发现replciation instance的Write IOPS降低到了80左右。为何重启RDS会提高性能，猜想可能原因有：
     - MySQL的一些系统设定。由于我们的My Sql采用了默认的参数配置，这些配置重启后，获得了最佳的性能。
     - replciation instance访问和处理MySQL数据的逻辑。这些逻辑制导致了重启后性能大大提高。
 
@@ -43,7 +43,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
 4. 在多张表同步的过程中，replication instance 的CPU占用率会比较高。对于多表的全量导入，需要选用配置高一些的cpu，建议是dms.c4.large以上。对于增量的同步，如果每天的增量在1G以内，dms.t2.medium够用的。
 5. 全量同步时，最好选择在MySQL的空闲时段。这是因为如果MySQL有频繁的数据变化，DMS读取MySQL数据的性能会下降，replication  instance也需要更大的内存来缓存增量数据，而这些都会进一步降低同步的性能。
 
-综合分析，以上几点点对性能的影响是比较大的。在方案中我们将会重点考虑。
+综合分析，以上几点对性能的影响是比较大的。在方案中我们将会重点考虑。
 
 除了以上的重点，也可以关注以下几点。
 
@@ -92,7 +92,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
     - dms-vpc-role 
     - dms-cloudwatch-logs-role
     - dms-access-for-endpoint
-3. 登录Linux Server，使用该IAM用户的Access Key和Security Key来配置。将在该Linux Server来执行DMS脚本。
+3. 登录Linux Server，使用IAM用户的Access Key和Security Key来配置。将在该Linux Server来执行下文的DMS脚本。
 
 ```
 aws configure
@@ -138,7 +138,7 @@ call MySQL.rds_show_configuration;  -- 查看结果
 ### 3.13 Redshift
 redshift实例需要拥有dms-access-for-endpoint的权限。见下图。详见[Using an Amazon Redshift Database as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html)。
 
-![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/dms-access-for-endpoint.png)
+![dms-access-for-endpoint](https://github.com/xuxiangwen/aws-dms/raw/master/image/access-for-endpoint.png)
 
 
 
@@ -255,7 +255,7 @@ EOF
 ./create_task.sh
 
 # 5. start task
-# 在AWS Console中启动task：cds_all
+# 在AWS Console中启动task：cdc_all
 ```
 
 由于target是Redshift，BatchApplyTimeoutMin和BatchApplyTimeoutMax的值非常重要。这两个变量定义每隔多少秒来进行Copy数据。在实际项目中，可以根据数据同步的实时性要求和Redshift的负载情况来进行设定。测试表明，BatchApplyTimeoutMin从120秒改成600秒，redshif集群的负载大大减轻。详情如下：  
