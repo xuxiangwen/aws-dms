@@ -87,7 +87,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
     - Task3: ID from 20,000,001 to 30,000,000
     - ...
     
-    采用递增的主键的ID作为拆分的字段，可以获得很好的性能。而如果采用时间来作为拆分字段，一般该字段最好是Partition Key，否者的话，性能可能会受影响。
+    采用递增的主键的ID作为拆分的字段，可以获得很好的性能。而如果采用时间来作为拆分字段，一般该字段最好是Partition Key，否则的话，性能可能会受影响。
 - 方案三和方案四非常相似，由于隔离了业务数据库，可以方便惬意的来处理。
 
     - 对全量同步的时间没有绝对要求。
@@ -96,7 +96,7 @@ MySQL Instance的类型的是db.r3.large，Replication Instance的类型是dms.c
     
     在图中，我们选用了snapshot的备份创建时间作为onging同步的开始时间点，这要求业务数据库有一个比较长的业务空闲期。
     
-    另外一个方法，或许也是更好的方法是，记录一下全量同步后的每个表的[Max ID]，然后创建一个full load+ongoing类型的同步Task。在Task中，每个表的row filtering里设定ID >= [Max ID ID]+1。
+    另外一个方法，或许也是更好的方法是，记录一下全量同步后的每个表的[Max ID]，然后创建一个full load+ongoing类型的同步Task。在Task中，每个表的row filtering里设定ID >= [Max ID]+1。
     
     上面的这个方法不要求有业务空闲期，所以适用面更广。唯一的要求是：保证ID是主键，并且是单向递增的字段。其实这个方法和上面提到的方案一和方案二的性能优化方法思路非常相似。
     
