@@ -6,9 +6,10 @@ source $script_path/dms.conf
 source $script_path/arn.conf
 
 cdc_start_position_=${1:-$cdc_start_position}
+LOGGER_SEVERITY=${2:-LOGGER_SEVERITY_DEFAULT}
 
 $script_path/init_table_mapping.sh
-$script_path/init_task_setting.sh LOGGER_SEVERITY_DEFAULT
+$script_path/init_task_setting.sh $LOGGER_SEVERITY
 
 oldIFS=$IFS
 IFS=,

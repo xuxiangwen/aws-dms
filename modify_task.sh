@@ -6,7 +6,7 @@ source $script_path/dms.conf
 source $script_path/arn.conf
 
 task_id=${1}
-LOGGER_SEVERITY=${2:-LOGGER_SEVERITY_DEBUG}
+LOGGER_SEVERITY=${2:-LOGGER_SEVERITY_DEFAULT}
 
 $script_path/init_table_mapping.sh
 $script_path/init_task_setting.sh $LOGGER_SEVERITY
@@ -20,7 +20,9 @@ echo aws dms modify-replication-task \
 --replication-task-settings file://json/${task_id}_task.json
 aws dms modify-replication-task \
 --replication-task-arn $task_arn \
+--table-mappings file://json/${task_id}_table.json \
 --replication-task-settings file://json/${task_id}_task.json 
+
 
 echo $task_id is being modified
 echo ------------------------------------------------------------------------------
