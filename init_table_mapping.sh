@@ -96,6 +96,16 @@ cat << EOF > $script_path/json/${task_id}_table.json
     },    
     {
       "rule-type": "selection",
+      "rule-id": "6",
+      "rule-name": "6",
+      "object-locator": {
+        "schema-name": "customer_service_prod",
+        "table-name": "platform_caseinfo"
+      },
+      "rule-action": "include"
+    },
+    {
+      "rule-type": "selection",
       "rule-id": "50",
       "rule-name": "50",
       "object-locator": {
@@ -498,7 +508,7 @@ cat << EOF > $script_path/json/${task_id}_table.json
           "filter-conditions": [
             {
               "filter-operator": "gte",
-              "value": "22190830"
+              "value": "22807439"
             }
           ]
         }
@@ -520,7 +530,7 @@ cat << EOF > $script_path/json/${task_id}_table.json
           "filter-conditions": [
             {
               "filter-operator": "gte",
-              "value": "40346714"
+              "value": "41154445"
             }
           ]
         }
